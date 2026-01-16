@@ -13,8 +13,7 @@ A comprehensive system that allows users to query BigQuery data using natural la
 - **Multiple Interfaces**: 
   - Streamlit web UI
   - FastAPI REST API
-  - Command-line Python scripts
-- **Dual LLM Support**: Works with both direct Anthropic API and VEGAS platform
+- **Dual LLM Support**: Works with both direct API's and platforms
 
 ## 🏗️ Architecture
 ```
@@ -44,7 +43,7 @@ A comprehensive system that allows users to query BigQuery data using natural la
 - Python 3.8+
 - Neo4j database with your data ontology/metadata
 - Google Cloud Project with BigQuery access
-- Anthropic API key OR VEGAS platform access
+- Anthropic API key OR platform access
 - Required Python packages (see requirements below)
 
 ## 🚀 Installation
@@ -202,41 +201,6 @@ GET  /api/sessions               # List active sessions
 DELETE /api/session/{id}         # Delete session
 ```
 
-### Option 3: Python Scripts
-
-Direct Python usage:
-```python
-from bigquery_chat_orchestrator import BigQueryChatOrchestrator
-
-# Initialize orchestrator
-orchestrator = BigQueryChatOrchestrator(
-    neo4j_uri="bolt://localhost:7687",
-    neo4j_username="neo4j",
-    neo4j_password="password",
-    connection_project_id="auth-project",
-    data_project_id="data-project",
-    dataset_id="my_dataset",
-    use_vegas=False,
-    anthropic_api_key="your-key"
-)
-
-# Process question
-result = orchestrator.process_question(
-    user_question="What is the trend of customer sentiment?",
-    execute=True,
-    include_summary=True,
-    include_visualization=True
-)
-
-# Access results
-print("SQL:", result["sql"])
-print("Summary:", result["summary"])
-print("Visualization:", result["visualization"])
-print("Data rows:", len(result["data"]))
-
-orchestrator.close()
-```
-
 ## 📁 Project Structure
 ```
 talk2data/
@@ -246,7 +210,6 @@ talk2data/
 │   ├── bigquery_data_query_agent.py          # SQL generation & execution
 │   ├── claude_summary_agent.py               # AI summaries
 │   ├── visualization_recommendation_agent.py # Chart recommendations
-│   └── vegas_adapter.py                      # LLM abstraction layer
 │
 ├── User Interface/
 │   ├── app_virtual_kg.py                     # Streamlit web app
@@ -329,139 +292,6 @@ Try asking:
 "What is our average handle time by team?"
 "Show customer sentiment trends over the past 6 months"
 "How many calls required supervisor escalation last week?"
-"What's the distribution of call outcomes by product?"
-"Compare agent performance across call centers"
-"What are the top 5 reasons for customer complaints?"
-"Show me daily call volume for the last month"
 ```
 
-## 🐛 Troubleshooting
 
-### "No relevant tables found"
-- Check Neo4j connection and ontology
-- Verify concepts are properly defined in Neo4j
-- Try rephrasing your question with different keywords
-
-### "Payload Too Large"
-- Question involves too many tables/columns
-- Narrow your query to specific metrics or time periods
-- Use more specific terminology
-
-### BigQuery authentication errors
-- Verify `GOOGLE_APPLICATION_CREDENTIALS` is set correctly
-- Check service account has BigQuery Data Viewer permissions
-- Confirm project IDs match your GCP setup
-
-### LLM errors
-- Verify API keys are valid and active
-- Check VEGAS endpoint connectivity (if using VEGAS)
-- Review prompt context sizes in agent files
-
-### Neo4j connection issues
-- Verify Neo4j is running and accessible
-- Check URI format (bolt:// or neo4j://)
-- Confirm credentials are correct
-
-## 🔐 Security Considerations
-
-- Store API keys in `.env` file (never commit to git)
-- Add `.env` to your `.gitignore`
-- Use service accounts with minimal required permissions
-- Implement rate limiting for production APIs
-- Validate and sanitize all user inputs
-- Review generated SQL before execution in sensitive environments
-- Use read-only BigQuery credentials when possible
-
-## 🚀 Deployment
-
-### Docker Deployment (Recommended)
-
-Create a `Dockerfile`:
-```dockerfile
-FROM python:3.10-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-EXPOSE 8000
-
-CMD ["python", "User Interface/fastapi_talk2data.py"]
-```
-
-Build and run:
-```bash
-docker build -t talk2data .
-docker run -p 8000:8000 --env-file .env talk2data
-```
-
-### Cloud Deployment
-
-**Google Cloud Run:**
-```bash
-gcloud run deploy talk2data \
-  --source . \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated
-```
-
-**AWS/Azure:** Similar container deployment options available.
-
-## 📈 Performance Tips
-
-- Use specific date ranges in questions to limit data scanned
-- Index frequently queried columns in BigQuery
-- Cache common queries using sessions
-- Implement query result caching for repeated questions
-- Monitor BigQuery slot usage and costs
-
-## 🤝 Contributing
-
-Contributions welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 Changelog
-
-### Version 1.0.0
-- Initial release
-- Cross-project BigQuery support
-- VEGAS platform integration
-- Concept-first metadata retrieval
-- Visualization recommendations
-- Comprehensive error handling
-
-## 📄 License
-
-[Add your license here - e.g., MIT, Apache 2.0]
-
-## 👥 Authors
-
-[Add author information]
-
-## 🙏 Acknowledgments
-
-- Anthropic Claude for AI capabilities
-- Google BigQuery for data storage
-- Neo4j for knowledge graph
-- Streamlit for rapid UI development
-- FastAPI for robust API framework
-
-## 📧 Support
-
-For questions or issues:
-- Open an issue on GitHub
-- [Add contact information]
-- [Add documentation links]
-
----
-
-**Made with ❤️ by [Your Team]**
