@@ -28,16 +28,24 @@ Execution Order (all in one script):
 Usage:
     python unified_ontology_loader.py
 
+    # Or with custom file paths
+    python unified_ontology_loader.py \
+        --ontology my_ontology.json \
+        --context my_context.json \
+        --concepts my_concepts.json
+
 Prerequisites:
 - Neo4j database running
 - Environment variables: NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD
 - JSON files: ontology.json, business_context.json, business_concepts.json
+  (or use .example.json files as templates)
 """
 
 from neo4j import GraphDatabase
 import json
 from typing import Dict, Any, List
 import os
+import argparse
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -64,7 +72,7 @@ class UnifiedOntologyLoader:
     # LAYER 1: Load Physical Schema (Lower Ontology)
     # =========================================================================
     
-    def load_physical_schema(self, ontology_file: str = "ontology.json"):
+    def load_physical_schema(self, ontology_file: str = "ontology.example.json"):
         """
         Load physical database schema into Neo4j
         
@@ -78,6 +86,7 @@ class UnifiedOntologyLoader:
         print("\n" + "="*70)
         print("📥 LAYER 1: Loading Physical Schema (Lower Ontology)")
         print("="*70)
+        print(f"   File: {ontology_file}")
         
         # Load ontology file
         try:
@@ -85,6 +94,7 @@ class UnifiedOntologyLoader:
                 ontology = json.load(f)
         except FileNotFoundError:
             print(f"❌ Error: {ontology_file} not found!")
+            print(f"💡 Tip: Copy ontology.example.json to {ontology_file} and customize it")
             return False
         except json.JSONDecodeError as e:
             print(f"❌ Error: Invalid JSON in {ontology_file}: {e}")
@@ -164,15 +174,21 @@ class UnifiedOntologyLoader:
             # Create foreign key relationships at column level
             for relationship in relationships:
                 if relationship.get("via_field"):
-                    session.run("""
-                        MATCH (from_table:Table {name: $from_table})-[:HAS_COLUMN]->(fk_col:Column {name: $via_field})
-                        MATCH (to_table:Table {name: $to_table})-[:HAS_COLUMN]->(pk_col:Column {name: $via_field})
-                        MERGE (fk_col)-[:FOREIGN_KEY_TO]->(pk_col)
-                    """,
-                        from_table=relationship["from_table"],
-                        to_table=relationship["to_table"],
-                        via_field=relationship["via_field"]
-                    )
+                    # Handle via_field as either string or list
+                    via_fields = relationship["via_field"]
+                    if not isinstance(via_fields, list):
+                        via_fields = [via_fields]
+                    
+                    for via_field in via_fields:
+                        session.run("""
+                            MATCH (from_table:Table {name: $from_table})-[:HAS_COLUMN]->(fk_col:Column {name: $via_field})
+                            MATCH (to_table:Table {name: $to_table})-[:HAS_COLUMN]->(pk_col:Column {name: $via_field})
+                            MERGE (fk_col)-[:FOREIGN_KEY_TO]->(pk_col)
+                        """,
+                            from_table=relationship["from_table"],
+                            to_table=relationship["to_table"],
+                            via_field=via_field
+                        )
             
             # Store key metrics
             metrics = ontology.get("key_metrics", [])
@@ -221,7 +237,7 @@ class UnifiedOntologyLoader:
     # LAYER 2: Enrich with Business Context
     # =========================================================================
     
-    def enrich_business_context(self, context_file: str = "business_context.json"):
+    def enrich_business_context(self, context_file: str = "business_context.example.json"):
         """
         Enrich Column nodes with business context
         
@@ -236,6 +252,7 @@ class UnifiedOntologyLoader:
         print("\n" + "="*70)
         print("📥 LAYER 2: Enriching Business Context")
         print("="*70)
+        print(f"   File: {context_file}")
         
         # Load business context file
         try:
@@ -243,6 +260,7 @@ class UnifiedOntologyLoader:
                 data = json.load(f)
         except FileNotFoundError:
             print(f"⚠️  Warning: {context_file} not found, skipping business context")
+            print(f"💡 Tip: Copy business_context.example.json to {context_file} and customize it")
             return True
         except json.JSONDecodeError as e:
             print(f"❌ Error: Invalid JSON in {context_file}: {e}")
@@ -322,7 +340,7 @@ class UnifiedOntologyLoader:
     # LAYER 3: Create Concept Ontology (Upper Ontology)
     # =========================================================================
     
-    def create_concept_ontology(self, concepts_file: str = "business_concepts.json"):
+    def create_concept_ontology(self, concepts_file: str = "business_concepts.example.json"):
         """
         Create business concept layer (upper ontology)
         
@@ -336,6 +354,7 @@ class UnifiedOntologyLoader:
         print("\n" + "="*70)
         print("📥 LAYER 3: Creating Concept Ontology (Upper Ontology)")
         print("="*70)
+        print(f"   File: {concepts_file}")
         
         # Load concepts file
         try:
@@ -343,6 +362,7 @@ class UnifiedOntologyLoader:
                 concepts = json.load(f)
         except FileNotFoundError:
             print(f"⚠️  Warning: {concepts_file} not found, skipping concept ontology")
+            print(f"💡 Tip: Copy business_concepts.example.json to {concepts_file} and customize it")
             return True
         except json.JSONDecodeError as e:
             print(f"❌ Error: Invalid JSON in {concepts_file}: {e}")
@@ -417,16 +437,16 @@ class UnifiedOntologyLoader:
         print(f"  • Mapping failures: {table_mapping_failures}")
         
         return True
-        
+    
     # =========================================================================
     # Main Load Method
     # =========================================================================
     
     def load_complete_ontology(
         self,
-        ontology_file: str = "ontology.json",
-        context_file: str = "business_context.json",
-        concepts_file: str = "business_concepts.json",
+        ontology_file: str = "ontology.example.json",
+        context_file: str = "business_context.example.json",
+        concepts_file: str = "business_concepts.example.json",
         clear_existing: bool = True
     ):
         """
@@ -445,6 +465,10 @@ class UnifiedOntologyLoader:
         print("  Layer 1: Physical Schema (Tables, Columns, Relationships)")
         print("  Layer 2: Business Context (Semantic Enrichment)")
         print("  Layer 3: Concept Ontology (Business Concepts)")
+        print("\nFiles:")
+        print(f"  • Ontology: {ontology_file}")
+        print(f"  • Context: {context_file}")
+        print(f"  • Concepts: {concepts_file}")
         
         # Step 0: Clear existing (optional)
         if clear_existing:
@@ -476,7 +500,60 @@ class UnifiedOntologyLoader:
         return True
 
 
-if __name__ == "__main__":
+def main():
+    """Main function with command-line argument support"""
+    
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description="Load complete ontology into Neo4j knowledge graph",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Use example files (default)
+  python unified_ontology_loader.py
+
+  # Use custom files
+  python unified_ontology_loader.py \\
+      --ontology my_ontology.json \\
+      --context my_context.json \\
+      --concepts my_concepts.json
+
+  # Don't clear existing data
+  python unified_ontology_loader.py --no-clear
+
+Environment Variables Required:
+  NEO4J_URI       - Neo4j connection URI (e.g., bolt://localhost:7687)
+  NEO4J_USERNAME  - Neo4j username (e.g., neo4j)
+  NEO4J_PASSWORD  - Neo4j password
+        """
+    )
+    
+    parser.add_argument(
+        '--ontology',
+        default='ontology.example.json',
+        help='Path to ontology JSON file (default: ontology.example.json)'
+    )
+    
+    parser.add_argument(
+        '--context',
+        default='business_context.example.json',
+        help='Path to business context JSON file (default: business_context.example.json)'
+    )
+    
+    parser.add_argument(
+        '--concepts',
+        default='business_concepts.example.json',
+        help='Path to business concepts JSON file (default: business_concepts.example.json)'
+    )
+    
+    parser.add_argument(
+        '--no-clear',
+        action='store_true',
+        help='Do not clear existing Neo4j data before loading'
+    )
+    
+    args = parser.parse_args()
+    
     # Initialize loader
     loader = UnifiedOntologyLoader(
         uri=os.getenv("NEO4J_URI", "bolt://localhost:7687"),
@@ -487,16 +564,24 @@ if __name__ == "__main__":
     try:
         # Load complete ontology
         success = loader.load_complete_ontology(
-            ontology_file="ontology.json",
-            context_file="business_context.json",
-            concepts_file="business_concepts.json",
-            clear_existing=True
+            ontology_file=args.ontology,
+            context_file=args.context,
+            concepts_file=args.concepts,
+            clear_existing=not args.no_clear
         )
         
         if success:
             print("\n🎉 Ontology is ready for use!")
+            print("\n💡 Next Steps:")
+            print("  1. Customize the example JSON files with your actual data")
+            print("  2. Re-run this script to load your custom ontology")
+            print("  3. Start querying with the Talk2Data system!")
         else:
             print("\n❌ Ontology loading failed!")
             
     finally:
         loader.close()
+
+
+if __name__ == "__main__":
+    main()
