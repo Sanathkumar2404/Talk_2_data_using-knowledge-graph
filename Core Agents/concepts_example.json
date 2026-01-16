@@ -1,0 +1,253 @@
+[
+  {
+    "concept": "Customer Sentiment Analysis",
+    "definition": "Overall satisfaction and emotional tone expressed by customer during and after call interaction, including sentiment scores, trends, and distribution",
+    "tables": [
+      {"name": "sentiment_call_detail", "confidence": "high"},
+      {"name": "sentiment_agent_detail", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Time Period & Trends",
+    "definition": "Date ranges, time periods, and temporal analysis for tracking changes over time (monthly, quarterly, yearly trends, specific date ranges)",
+    "tables": [
+      {"name": "sentiment_call_detail", "confidence": "high"},
+      {"name": "call_center_summary", "confidence": "high"},
+      {"name": "churn_summary", "confidence": "medium"}
+    ]
+  },
+  {
+    "concept": "Call Reason & Intent",
+    "definition": "Why customer called - includes all levels of call drivers (L1, L2, L3), primary intent, secondary intent, call reason, and customer need",
+    "tables": [
+      {"name": "sentiment_call_detail", "confidence": "high"},
+      {"name": "loyalty_call_insights", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Call Transfer & Department Routing",
+    "definition": "Call transfers between departments, transfer sequences, departments involved, and transfer patterns",
+    "tables": [
+      {"name": "sentiment_call_detail", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Call Escalation & Supervisor Involvement",
+    "definition": "Calls escalated to supervisors, supervisor involvement, escalation patterns and reasons",
+    "tables": [
+      {"name": "sentiment_call_detail", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Call Duration & Handle Time",
+    "definition": "Total call time, handle time, talk time, hold time, and time-related call metrics",
+    "tables": [
+      {"name": "sentiment_call_detail", "confidence": "high"},
+      {"name": "sentiment_agent_detail", "confidence": "high"},
+      {"name": "call_center_summary", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Agent Performance & Metrics",
+    "definition": "Agent-level performance metrics including sentiment scores, resolution rates, handle time, and improvement trends",
+    "tables": [
+      {"name": "sentiment_agent_detail", "confidence": "high"},
+      {"name": "call_center_summary", "confidence": "medium"}
+    ]
+  },
+  {
+    "concept": "Call Outcome & Resolution",
+    "definition": "How call was resolved, including resolution status, callbacks promised, support tickets created, and issue resolution",
+    "tables": [
+      {"name": "sentiment_call_detail", "confidence": "high"},
+      {"name": "loyalty_call_insights", "confidence": "medium"}
+    ]
+  },
+  {
+    "concept": "Call Topics & Issues",
+    "definition": "Main topics discussed during call, primary subjects, customer issues, and problem categories",
+    "tables": [
+      {"name": "sentiment_call_detail", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Customer Type & Segmentation",
+    "definition": "Customer classification including prepaid/postpaid, first-time/repeat callers, customer segments, and account types",
+    "tables": [
+      {"name": "customer_account_master", "confidence": "high"},
+      {"name": "sentiment_call_detail", "confidence": "medium"}
+    ]
+  },
+  {
+    "concept": "Call Volume & Distribution",
+    "definition": "Number of calls, call counts, call distribution, and volume analysis",
+    "tables": [
+      {"name": "sentiment_call_detail", "confidence": "high"},
+      {"name": "call_center_summary", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Geographic Location",
+    "definition": "Geographic analysis including regions, markets, locations, cities, and states",
+    "tables": [
+      {"name": "sentiment_call_detail", "confidence": "high"},
+      {"name": "customer_account_master", "confidence": "medium"},
+      {"name": "churn_summary", "confidence": "medium"}
+    ]
+  },
+  {
+    "concept": "Call Disconnect & Disconnection",
+    "definition": "Call disconnection events, disconnect rates, and reasons for disconnection",
+    "tables": [
+      {"name": "sentiment_call_detail", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Customer Billing & Charges",
+    "definition": "Billing issues, charges, payments, invoices, and billing-related concerns",
+    "tables": [
+      {"name": "sentiment_call_detail", "confidence": "high"},
+      {"name": "loyalty_call_insights", "confidence": "medium"}
+    ]
+  },
+  {
+    "concept": "Customer Churn & Retention",
+    "definition": "Customer disconnects, voluntary/involuntary churn, retention attempts, and churn analysis",
+    "tables": [
+      {"name": "churn_summary", "confidence": "high"},
+      {"name": "loyalty_agent_activity", "confidence": "medium"},
+      {"name": "loyalty_call_insights", "confidence": "medium"}
+    ]
+  },
+  {
+    "concept": "IVR Usage & Interaction",
+    "definition": "Interactive Voice Response system usage, IVR calls, self-service attempts, and IVR session data",
+    "tables": [
+      {"name": "ivr_calls", "confidence": "high"},
+      {"name": "call_center_summary", "confidence": "medium"}
+    ]
+  },
+  {
+    "concept": "Customer Service Plan",
+    "definition": "Price plans, service plans, plan types, and customer plan information",
+    "tables": [
+      {"name": "customer_price_plans", "confidence": "high"},
+      {"name": "customer_account_master", "confidence": "medium"}
+    ]
+  },
+  {
+    "concept": "Call Center Department",
+    "definition": "Call center departments, business units, skill groups, and organizational units handling calls",
+    "tables": [
+      {"name": "sentiment_call_detail", "confidence": "high"},
+      {"name": "sentiment_agent_detail", "confidence": "high"},
+      {"name": "call_center_locations", "confidence": "medium"}
+    ]
+  },
+  {
+    "concept": "Customer Identification",
+    "definition": "Customer IDs, phone numbers, account numbers, and customer identifiers",
+    "tables": [
+      {"name": "customer_account_master", "confidence": "high"},
+      {"name": "sentiment_call_detail", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Customer Device & Equipment",
+    "definition": "Customer devices, phone models, equipment types, device issues, and hardware-related information",
+    "tables": [
+      {"name": "customer_account_master", "confidence": "high"},
+      {"name": "device_specifications", "confidence": "high"},
+      {"name": "equipment_sales", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Network & Service Quality",
+    "definition": "Network coverage, service outages, connectivity issues, network performance, and technical service problems",
+    "tables": [
+      {"name": "sentiment_call_detail", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Account Activity & Transactions",
+    "definition": "Customer account transactions including activations, deactivations, plan changes, line adds/removes, and account modifications",
+    "tables": [
+      {"name": "daily_line_activity", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Revenue & Financial Metrics",
+    "definition": "Revenue, average revenue per user, financial performance, costs, and monetary metrics",
+    "tables": [
+      {"name": "subscriber_summary", "confidence": "high"},
+      {"name": "equipment_sales", "confidence": "medium"}
+    ]
+  },
+  {
+    "concept": "Customer Demographics & Profile",
+    "definition": "Customer age, tenure, generation, demographics, and profile characteristics",
+    "tables": [
+      {"name": "customer_account_master", "confidence": "high"},
+      {"name": "daily_line_activity", "confidence": "medium"},
+      {"name": "churn_summary", "confidence": "medium"}
+    ]
+  },
+  {
+    "concept": "Retention Offers & Promotions",
+    "definition": "Retention offers, promotions, discounts, offers made to customers, and offer acceptance/rejection",
+    "tables": [
+      {"name": "loyalty_offers", "confidence": "high"},
+      {"name": "loyalty_agent_activity", "confidence": "high"},
+      {"name": "loyalty_call_insights", "confidence": "medium"}
+    ]
+  },
+  {
+    "concept": "Call Transcript",
+    "definition": "Raw text transcript and metadata of the customer-agent interaction",
+    "tables": [
+      {"name": "call_transcripts", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "IVR Call Interaction",
+    "definition": "Details of the customer's interaction with the Interactive Voice Response system",
+    "tables": [
+      {"name": "ivr_calls", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Call Center Location",
+    "definition": "Reference data for call center sites, locations, and configuration",
+    "tables": [
+      {"name": "call_center_locations", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Device Specification",
+    "definition": "Technical specifications and capabilities of mobile devices and equipment",
+    "tables": [
+      {"name": "device_specifications", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Loyalty Agent Toolbox",
+    "definition": "Tracking of retention tools and offers presented by agents during calls",
+    "tables": [
+      {"name": "loyalty_agent_activity", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Loyalty Call Insight",
+    "definition": "Analytical insights derived from loyalty and retention calls",
+    "tables": [
+      {"name": "loyalty_call_insights", "confidence": "high"}
+    ]
+  },
+  {
+    "concept": "Loyalty Offer Detail",
+    "definition": "Specifics of retention offers made to customers and their acceptance status",
+    "tables": [
+      {"name": "loyalty_offers", "confidence": "high"}
+    ]
+  }
+]
