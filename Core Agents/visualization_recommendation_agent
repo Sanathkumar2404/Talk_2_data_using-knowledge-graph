@@ -1,0 +1,399 @@
+"""
+Visualization Recommendation Agent
+Analyzes query results and recommends the best chart/graph type for visualization
+Updated to work with VEGAS platform
+"""
+
+from vegas_adapter import VEGASAdapter
+import json
+from typing import Dict, List, Any, Optional
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+class VisualizationRecommendationAgent:
+    """
+    Agent that recommends optimal visualization types based on:
+    - User's question
+    - Data structure (columns and types)
+    - Number of rows
+    - Data patterns
+    """
+    
+    def __init__(
+        self,
+        use_vegas: bool = False,
+        anthropic_api_key: str = None,
+        vegas_endpoint: str = None,
+        vegas_api_key: str = None,
+        vegas_use_case: str = "your_use_case"
+    ):
+        """
+        Initialize with VEGAS or direct Anthropic API support
+        
+        Args:
+            use_vegas: Whether to use VEGAS platform
+            anthropic_api_key: API key for direct Anthropic access
+            vegas_endpoint: VEGAS endpoint URL
+            vegas_api_key: VEGAS API key
+            vegas_use_case: VEGAS use case (default: "your_use_case")
+        """
+        # LLM adapter (supports both direct API and VEGAS)
+        self.llm = VEGASAdapter(
+            use_vegas=use_vegas,
+            anthropic_api_key=anthropic_api_key,
+            vegas_endpoint=vegas_endpoint,
+            vegas_api_key=vegas_api_key,
+            use_case=vegas_use_case
+        )
+    
+    def recommend_visualization(
+        self,
+        question: str,
+        sql: str,
+        data: List[Dict[str, Any]],
+        row_count: int
+    ) -> Dict[str, Any]:
+        """
+        Recommend the best visualization based on query results
+        
+        Args:
+            question: Original user question
+            sql: Generated SQL query
+            data: Query results (list of dicts)
+            row_count: Number of rows returned
+            
+        Returns:
+            Dictionary with visualization recommendation
+        """
+        
+        print("🎨 Analyzing data for visualization recommendation...")
+        
+        try:
+            # Analyze data structure
+            data_analysis = self._analyze_data_structure(data, row_count)
+            
+            # Build context for LLM
+            context = self._build_visualization_context(
+                question=question,
+                sql=sql,
+                data_analysis=data_analysis,
+                sample_data=data[:5] if data else []  # First 5 rows
+            )
+            
+            # Call LLM with context_id="visualization"
+            print("🎨 Requesting visualization recommendation...")
+            
+            # Combine data_structure and sample_data into single context
+            combined_context = f"""DATA STRUCTURE:
+{context["data_structure"]}
+
+SAMPLE DATA (first 5 rows):
+{context["sample_data"]}"""
+            
+            response_text = self.llm.generate(
+                context_id="visualization",
+                variables={
+                    "user_question": question,
+                    "sql_query": sql,
+                    "context": combined_context
+                },
+                temperature=0.3,
+                max_tokens=2000
+            )
+            
+            # Parse JSON response
+            recommendation = self._parse_recommendation(response_text)
+            
+            # Validate and enhance recommendation
+            recommendation = self._validate_recommendation(
+                recommendation, 
+                data_analysis
+            )
+            
+            print(f"✅ Recommended: {recommendation.get('recommended_chart')}")
+            
+            return recommendation
+            
+        except Exception as e:
+            print(f"❌ Error generating visualization recommendation: {str(e)}")
+            # Return safe fallback
+            return self._get_fallback_recommendation(data, row_count)
+    
+    def _analyze_data_structure(
+        self, 
+        data: List[Dict[str, Any]], 
+        row_count: int
+    ) -> Dict[str, Any]:
+        """Analyze the structure and patterns in the data"""
+        
+        if not data:
+            return {
+                "columns": [],
+                "column_types": {},
+                "row_count": 0,
+                "has_numeric": False,
+                "has_categorical": False,
+                "has_datetime": False
+            }
+        
+        sample_row = data[0]
+        columns = list(sample_row.keys())
+        
+        # Detect column types
+        column_types = {}
+        for col in columns:
+            col_type = self._detect_column_type(data, col)
+            column_types[col] = col_type
+        
+        analysis = {
+            "columns": columns,
+            "column_types": column_types,
+            "row_count": row_count,
+            "has_numeric": "numeric" in column_types.values(),
+            "has_categorical": "categorical" in column_types.values(),
+            "has_datetime": "datetime" in column_types.values(),
+            "numeric_columns": [c for c, t in column_types.items() if t == "numeric"],
+            "categorical_columns": [c for c, t in column_types.items() if t == "categorical"],
+            "datetime_columns": [c for c, t in column_types.items() if t == "datetime"]
+        }
+        
+        return analysis
+    
+    def _detect_column_type(
+        self, 
+        data: List[Dict[str, Any]], 
+        column: str
+    ) -> str:
+        """Detect if column is numeric, categorical, or datetime"""
+        
+        sample_values = [row.get(column) for row in data[:10] if row.get(column) is not None]
+        
+        if not sample_values:
+            return "unknown"
+        
+        # Check if numeric
+        try:
+            numeric_count = sum(1 for v in sample_values if isinstance(v, (int, float)))
+            if numeric_count / len(sample_values) > 0.8:
+                return "numeric"
+        except:
+            pass
+        
+        # Check if datetime
+        datetime_keywords = ['date', 'time', 'dt', 'ts', 'timestamp', 'month', 'year', 'day']
+        if any(kw in column.lower() for kw in datetime_keywords):
+            return "datetime"
+        
+        # Default to categorical
+        return "categorical"
+    
+    def _build_visualization_context(
+        self,
+        question: str,
+        sql: str,
+        data_analysis: Dict[str, Any],
+        sample_data: List[Dict[str, Any]]
+    ) -> Dict[str, str]:
+        """Build the context strings for LLM"""
+        
+        # Format data structure
+        data_structure = f"""COLUMNS: {', '.join(data_analysis['columns'])}
+
+COLUMN TYPES:
+{json.dumps(data_analysis['column_types'], indent=2)}
+
+DATA CHARACTERISTICS:
+- Row Count: {data_analysis['row_count']}
+- Has Numeric Columns: {data_analysis['has_numeric']}
+- Has Categorical Columns: {data_analysis['has_categorical']}
+- Has DateTime Columns: {data_analysis['has_datetime']}
+- Numeric Columns: {', '.join(data_analysis['numeric_columns']) if data_analysis['numeric_columns'] else 'None'}
+- Categorical Columns: {', '.join(data_analysis['categorical_columns']) if data_analysis['categorical_columns'] else 'None'}
+- DateTime Columns: {', '.join(data_analysis['datetime_columns']) if data_analysis['datetime_columns'] else 'None'}"""
+        
+        # Format sample data
+        sample_data_str = json.dumps(sample_data, indent=2, default=str)
+        
+        return {
+            "data_structure": data_structure,
+            "sample_data": sample_data_str
+        }
+    
+    def _parse_recommendation(self, response_text: str) -> Dict[str, Any]:
+        """Parse JSON response"""
+        
+        # Remove markdown code blocks if present
+        response_text = response_text.strip()
+        if response_text.startswith('```'):
+            # Extract content between ```
+            lines = response_text.split('\n')
+            cleaned_lines = []
+            in_code_block = False
+            
+            for line in lines:
+                if line.strip().startswith('```'):
+                    in_code_block = not in_code_block
+                    continue
+                if in_code_block or (not in_code_block and not line.strip().startswith('```')):
+                    cleaned_lines.append(line)
+            
+            response_text = '\n'.join(cleaned_lines).strip()
+        
+        try:
+            return json.loads(response_text)
+        except json.JSONDecodeError as e:
+            print(f"⚠️ Failed to parse JSON: {e}")
+            print(f"Response: {response_text[:200]}")
+            raise
+    
+    def _validate_recommendation(
+        self, 
+        recommendation: Dict[str, Any],
+        data_analysis: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Validate and enhance the recommendation"""
+        
+        # Ensure required fields exist
+        required_fields = [
+            'recommended_chart', 
+            'reasoning', 
+            'chart_config'
+        ]
+        
+        for field in required_fields:
+            if field not in recommendation:
+                recommendation[field] = self._get_default_value(field)
+        
+        # Validate chart type
+        valid_charts = [
+            'bar_chart', 'horizontal_bar_chart', 
+            'line_chart', 'pie_chart', 'donut_chart', 
+            'scatter_plot', 'area_chart', 'table', 
+            'metric_card', 'multi_metric_cards', 
+            'heatmap', 'funnel_chart', 'stacked_bar_chart'
+        ]
+        
+        if recommendation['recommended_chart'] not in valid_charts:
+            print(f"⚠️ Invalid chart type: {recommendation['recommended_chart']}, defaulting to table")
+            recommendation['recommended_chart'] = 'table'
+        
+        # Add metadata
+        recommendation['data_summary'] = {
+            'row_count': data_analysis['row_count'],
+            'column_count': len(data_analysis['columns']),
+            'columns': data_analysis['columns']
+        }
+        
+        return recommendation
+    
+    def _get_default_value(self, field: str) -> Any:
+        """Get default value for missing fields"""
+        defaults = {
+            'recommended_chart': 'table',
+            'reasoning': 'Default table view for data exploration',
+            'chart_config': {
+                'title': 'Query Results',
+                'show_legend': True,
+                'show_values': True
+            },
+            'alternative_charts': []
+        }
+        return defaults.get(field, None)
+    
+    def _get_fallback_recommendation(
+        self, 
+        data: List[Dict[str, Any]], 
+        row_count: int
+    ) -> Dict[str, Any]:
+        """Return a safe fallback recommendation if LLM fails"""
+        
+        # Simple logic-based fallback
+        if row_count == 0:
+            return {
+                'recommended_chart': 'metric_card',
+                'reasoning': 'No data returned',
+                'x_axis': None,
+                'y_axis': None,
+                'chart_config': {
+                    'title': 'No Results',
+                    'show_legend': False
+                },
+                'alternative_charts': [],
+                'data_summary': {
+                    'row_count': 0,
+                    'column_count': 0,
+                    'columns': []
+                }
+            }
+        
+        if row_count == 1 and data and len(data[0]) == 1:
+            # Single metric
+            return {
+                'recommended_chart': 'metric_card',
+                'reasoning': 'Single value result',
+                'x_axis': None,
+                'y_axis': list(data[0].keys())[0],
+                'chart_config': {
+                    'title': 'Result',
+                    'show_legend': False
+                },
+                'alternative_charts': ['table'],
+                'data_summary': {
+                    'row_count': 1,
+                    'column_count': 1,
+                    'columns': list(data[0].keys())
+                }
+            }
+        
+        # Default to table for complex data
+        return {
+            'recommended_chart': 'table',
+            'reasoning': 'Fallback to table view for data exploration',
+            'x_axis': None,
+            'y_axis': None,
+            'chart_config': {
+                'title': 'Query Results',
+                'show_legend': False,
+                'show_values': True
+            },
+            'alternative_charts': ['bar_chart'],
+            'data_summary': {
+                'row_count': row_count,
+                'column_count': len(data[0].keys()) if data else 0,
+                'columns': list(data[0].keys()) if data else []
+            }
+        }
+
+
+# Example usage
+if __name__ == "__main__":
+    # Test the agent
+    agent = VisualizationRecommendationAgent(
+        use_vegas=True,
+        vegas_endpoint=os.getenv("VEGAS_ENDPOINT"),
+        vegas_api_key=os.getenv("VEGAS_API_KEY"),
+        vegas_use_case="your_use_case"
+    )
+    
+    test_question = "What is the average value by category?"
+    test_sql = "SELECT category, AVG(value) as avg_value FROM data_table GROUP BY category"
+    test_data = [
+        {"category": "Category A", "avg_value": 245.5},
+        {"category": "Category B", "avg_value": 380.2},
+        {"category": "Category C", "avg_value": 156.8}
+    ]
+    
+    recommendation = agent.recommend_visualization(
+        question=test_question,
+        sql=test_sql,
+        data=test_data,
+        row_count=3
+    )
+    
+    print("\n" + "="*80)
+    print("VISUALIZATION RECOMMENDATION:")
+    print("="*80)
+    print(json.dumps(recommendation, indent=2))
