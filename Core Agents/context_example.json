@@ -1,0 +1,403 @@
+{
+  "business_context": [
+    {
+      "table": "sentiment_call_detail",
+      "column": "overall_sentiment",
+      "business_term": "Customer Sentiment",
+      "business_definition": "Overall satisfaction level expressed by customer during call interaction, categorized from very negative to very positive",
+      "sample_values": ["Positive", "Neutral", "Negative", "Frustrated", "Mixed"],
+      "semantic_type": "categorical",
+      "data_quality_note": "Contains some data quality issues. Filter to main 5 values for analysis.",
+      "usage_notes": "PRIMARY sentiment indicator. Use COUNT with CASE WHEN, not AVG. Use LOWER() for case-insensitive matching."
+    },
+    {
+      "table": "sentiment_call_detail",
+      "column": "call_driver_l1",
+      "business_term": "Call Driver (Level 1)",
+      "business_definition": "Primary high-level reason or category that prompted customer to contact call center",
+      "sample_values": ["Account", "Billing", "Equipment", "Technical Support", "Sales", "Service"],
+      "semantic_type": "categorical",
+      "data_quality_note": "Contains nulls and case inconsistencies",
+      "usage_notes": "Top-level categorization. Use TRIM(LOWER()) for matching. Filter out null values. Use GROUP BY for distribution analysis."
+    },
+    {
+      "table": "sentiment_call_detail",
+      "column": "departments_transferred",
+      "business_term": "Call Transfer Departments",
+      "business_definition": "Sequence of departments a call was transferred through during the interaction",
+      "semantic_type": "categorical_list",
+      "data_quality_note": "High cardinality - many unique transfer patterns.",
+      "usage_notes": "To detect transfers: WHERE departments_transferred IS NOT NULL AND departments_transferred != ''.",
+      "detection_logic": "Transferred = NOT NULL AND not empty string. Not Transferred = NULL OR empty string."
+    },
+    {
+      "table": "sentiment_call_detail",
+      "column": "total_call_time",
+      "business_term": "Call Duration",
+      "business_definition": "Total time spent handling customer call including talk time, hold time, and after-call work measured in seconds",
+      "semantic_type": "numeric_duration",
+      "unit": "seconds",
+      "typical_range": "0 to 7200 seconds (0 to 2 hours)",
+      "median_value": 835,
+      "average_value": 1212,
+      "data_quality_note": "Contains outliers and zero values",
+      "usage_notes": "Divide by 60 to convert to minutes. Filter: WHERE total_call_time > 0 AND total_call_time < 7200 (exclude zeros and outliers)."
+    },
+    {
+      "table": "sentiment_call_detail",
+      "column": "call_date",
+      "business_term": "Call Date",
+      "business_definition": "Date when customer call occurred",
+      "semantic_type": "date",
+      "usage_notes": "Use for time-based filtering and trending. Primary date field for temporal analysis."
+    },
+    {
+      "table": "customer_price_plans",
+      "column": "plan_code",
+      "business_term": "Price Plan Code",
+      "business_definition": "Unique code identifying customer's pricing plan or rate plan",
+      "sample_values": ["PLAN_001", "PLAN_002", "PLAN_UNLIMITED", "PLAN_BASIC"],
+      "semantic_type": "categorical",
+      "data_quality_note": "High cardinality. Consider grouping into plan categories for analysis.",
+      "usage_notes": "Use for pricing/plan segmentation. Use COUNT DISTINCT to understand plan diversity. Do NOT aggregate numerically (codes are categorical)."
+    },
+    {
+      "table": "customer_account_master",
+      "column": "line_type",
+      "business_term": "Line Type",
+      "business_definition": "Category code indicating type of service line",
+      "sample_values": ["Primary", "Secondary", "Data", "Voice"],
+      "semantic_type": "categorical",
+      "data_quality_note": "Clean categorical with limited values.",
+      "usage_notes": "Use for line type segmentation. Use exact match (case-sensitive)."
+    },
+    {
+      "table": "customer_account_master",
+      "column": "account_number",
+      "business_term": "Account Number",
+      "business_definition": "Unique identifier for customer account",
+      "semantic_type": "identifier",
+      "usage_notes": "Primary account identifier for billing and service management."
+    },
+    {
+      "table": "customer_account_master",
+      "column": "product_name",
+      "business_term": "Product Name",
+      "business_definition": "Service or equipment product type associated with the line",
+      "sample_values": ["5G Service", "4G LTE", "Basic Service", "Premium Data"],
+      "semantic_type": "categorical",
+      "data_quality_note": "High cardinality. Product names include technical specifications.",
+      "usage_notes": "Use for service type analysis. Group by keywords for simplified analysis. Do NOT aggregate."
+    },
+    {
+      "table": "customer_account_master",
+      "column": "market_code",
+      "business_term": "Market Code",
+      "business_definition": "Geographic market or territory identifier where service is provisioned",
+      "semantic_type": "categorical",
+      "data_quality_note": "High cardinality. Consider grouping into regions for analysis.",
+      "usage_notes": "Use for geographic segmentation. Use exact match for filtering. Do NOT aggregate numerically."
+    },
+    {
+      "table": "customer_account_master",
+      "column": "line_sequence_id",
+      "business_term": "Line Sequence ID",
+      "business_definition": "Sequential numeric identifier for individual lines within a customer account",
+      "semantic_type": "numeric_sequence",
+      "data_quality_note": "Sequential numbering. Used to differentiate multiple lines per customer.",
+      "usage_notes": "Use with customer_id to uniquely identify lines. For line counts: COUNT(DISTINCT line_sequence_id) GROUP BY customer_id. Do NOT aggregate as a metric."
+    },
+    {
+      "table": "customer_account_master",
+      "column": "line_status",
+      "business_term": "Line Status",
+      "business_definition": "Indicates whether a line is currently active, suspended, or terminated",
+      "sample_values": ["Active", "Suspended", "Disconnected", "On Hold"],
+      "semantic_type": "categorical",
+      "usage_notes": "Filter to active lines for most KPIs. Use exact case matching."
+    },
+    {
+      "table": "customer_account_master",
+      "column": "prepaid_flag",
+      "business_term": "Prepaid Indicator",
+      "business_definition": "Identifies whether the customer line operates on a prepaid or postpaid billing model",
+      "sample_values": ["Y", "N"],
+      "semantic_type": "categorical_boolean",
+      "usage_notes": "Use for segmentation in churn and sentiment analysis. Y=Prepaid, N=Postpaid."
+    },
+    {
+      "table": "customer_account_master",
+      "column": "device_type",
+      "business_term": "Device Type",
+      "business_definition": "Classifies the type of customer device or network technology",
+      "sample_values": ["5G_PHONE", "4G_PHONE", "TABLET", "HOTSPOT"],
+      "semantic_type": "categorical",
+      "data_quality_note": "May contain null values as strings.",
+      "usage_notes": "Use for device segmentation. Group by network generation for analysis."
+    },
+    {
+      "table": "customer_account_master",
+      "column": "customer_type",
+      "business_term": "Customer Type",
+      "business_definition": "Classifies the type of customer - individual, business, enterprise, etc.",
+      "sample_values": ["Individual", "Business", "Enterprise", "Government"],
+      "semantic_type": "categorical",
+      "usage_notes": "Use for customer segmentation. Do NOT aggregate."
+    },
+    {
+      "table": "loyalty_call_insights",
+      "column": "primary_issue",
+      "business_term": "Primary Call Intent",
+      "business_definition": "Identifies the primary reason or intent for the customer call",
+      "sample_values": ["Billing", "Disconnect", "Technical Support", "Sales"],
+      "semantic_type": "categorical",
+      "usage_notes": "Use for grouping and filtering customer call drivers. Do NOT aggregate."
+    },
+    {
+      "table": "churn_summary",
+      "column": "customer_id",
+      "business_term": "Customer ID",
+      "business_definition": "Unique identifier for customer in churn analysis",
+      "semantic_type": "identifier",
+      "usage_notes": "Join key for churn metrics. Use COUNT(DISTINCT customer_id) for unique churned customers."
+    },
+    {
+      "table": "customer_account_master",
+      "column": "customer_id",
+      "business_term": "Customer ID",
+      "business_definition": "Primary customer identifier in the master customer account table",
+      "semantic_type": "identifier",
+      "usage_notes": "CORE join key for all customer analysis. Foundation for customer relationships."
+    },
+    {
+      "table": "customer_price_plans",
+      "column": "customer_id",
+      "business_term": "Customer ID",
+      "business_definition": "Customer identifier for current price plan assignments",
+      "semantic_type": "identifier",
+      "usage_notes": "Join key for active price plans. Use for current plan analysis."
+    },
+    {
+      "table": "daily_line_activity",
+      "column": "customer_id",
+      "business_term": "Customer ID",
+      "business_definition": "Customer identifier for daily activity tracking",
+      "semantic_type": "identifier",
+      "usage_notes": "Join key for daily activity metrics. Use with activity_code for adds/disconnects."
+    },
+    {
+      "table": "equipment_sales",
+      "column": "customer_id",
+      "business_term": "Customer ID",
+      "business_definition": "Customer identifier for device purchases and upgrades",
+      "semantic_type": "identifier",
+      "usage_notes": "Join key for equipment sales analysis. Use for upgrade tracking."
+    },
+    {
+      "table": "call_center_summary",
+      "column": "customer_id",
+      "business_term": "Customer ID",
+      "business_definition": "Customer identifier linking call center interactions",
+      "semantic_type": "identifier",
+      "usage_notes": "Join key for call center metrics. Links to recovery_key and ivr_call_id."
+    },
+    {
+      "table": "ivr_calls",
+      "column": "customer_id",
+      "business_term": "Customer ID",
+      "business_definition": "Customer identifier for IVR system interactions",
+      "semantic_type": "identifier",
+      "usage_notes": "Join key for IVR analytics. Use for self-service analysis."
+    },
+    {
+      "table": "sentiment_call_detail",
+      "column": "customer_id",
+      "business_term": "Customer ID",
+      "business_definition": "Customer identifier for call-level sentiment analysis",
+      "semantic_type": "identifier",
+      "usage_notes": "Join key for sentiment analytics. Use for customer experience analysis."
+    },
+    {
+      "table": "sentiment_agent_detail",
+      "column": "customer_id",
+      "business_term": "Customer ID",
+      "business_definition": "Customer identifier for agent-level sentiment tracking",
+      "semantic_type": "identifier",
+      "usage_notes": "Join key for agent performance analytics. Links to agent_id."
+    },
+    {
+      "table": "subscriber_summary",
+      "column": "customer_id",
+      "business_term": "Customer ID",
+      "business_definition": "Customer identifier for subscription tracking",
+      "semantic_type": "identifier",
+      "usage_notes": "Join key for subscriber metrics. Use COUNT(DISTINCT customer_id) for active base."
+    },
+    {
+      "table": "customer_account_master",
+      "column": "phone_number",
+      "business_term": "Phone Number",
+      "business_definition": "Customer's mobile telephone number (encrypted/hashed)",
+      "semantic_type": "identifier",
+      "data_quality_note": "Values are encrypted for privacy.",
+      "usage_notes": "Line-level identifier. Links to customer_id and account_number."
+    },
+    {
+      "table": "churn_summary",
+      "column": "phone_number",
+      "business_term": "Phone Number",
+      "business_definition": "Mobile telephone number for churned line",
+      "semantic_type": "identifier",
+      "data_quality_note": "Encrypted for privacy.",
+      "usage_notes": "Identifies specific line that churned. Use COUNT(DISTINCT phone_number) for line counts."
+    },
+    {
+      "table": "sentiment_call_detail",
+      "column": "repeat_caller_3day_count",
+      "business_term": "Repeat Caller Count (3-Day)",
+      "business_definition": "Count of previous calls made by this customer within the past 3 days",
+      "sample_values": [0, 1, 2, 3, 4, 5],
+      "semantic_type": "numeric_count",
+      "data_quality_note": "Contains extreme outliers. Valid range: 0 to ~100.",
+      "usage_notes": "PRIMARY indicator for caller type. Segmentation: WHERE repeat_caller_3day_count = 0 for first-time callers, BETWEEN 1 AND 3 for occasional repeat, > 3 for frequent repeat. Use for first-call resolution analysis."
+    },
+    {
+      "table": "sentiment_call_detail",
+      "column": "call_driver_l2",
+      "business_term": "Call Sub-Driver (Level 2)",
+      "business_definition": "Secondary level categorization providing detailed breakdown of call intent",
+      "sample_values": ["Bill Explanation", "Payment Issue", "Service Problem", "Account Question"],
+      "semantic_type": "categorical",
+      "data_quality_note": "High cardinality within each L1 category.",
+      "usage_notes": "SECONDARY call reason detail. Use with call_driver_l1 for context. Filter out nulls."
+    },
+    {
+      "table": "sentiment_call_detail",
+      "column": "call_reason_l3",
+      "business_term": "Detailed Call Reason (Level 3)",
+      "business_definition": "Most granular level of call reason, providing specific details about exact issue",
+      "semantic_type": "categorical",
+      "data_quality_note": "Very high cardinality. Semantic overlap in values.",
+      "usage_notes": "DETAILED call reason. Use for root cause analysis. Always combine with L1 and L2 for context."
+    },
+    {
+      "table": "sentiment_call_detail",
+      "column": "customer_upset_reason",
+      "business_term": "Customer Upset Reason",
+      "business_definition": "Specific reason identified for customer dissatisfaction during call",
+      "semantic_type": "categorical",
+      "data_quality_note": "Contains nulls and empty strings.",
+      "usage_notes": "Use for negative sentiment root cause. Filter: WHERE customer_upset_reason IS NOT NULL."
+    },
+    {
+      "table": "sentiment_call_detail",
+      "column": "event_date",
+      "business_term": "Call Event Date",
+      "business_definition": "Calendar date on which the customer call occurred",
+      "semantic_type": "date",
+      "usage_notes": "Use for time-based analysis - daily, weekly, monthly trends. Primary date field for temporal queries."
+    },
+    {
+      "table": "sentiment_call_detail",
+      "column": "escalated_to_supervisor",
+      "business_term": "Supervisor Escalation",
+      "business_definition": "Whether the call was escalated to a supervisor",
+      "sample_values": ["yes", "no"],
+      "semantic_type": "categorical_boolean",
+      "usage_notes": "Use for escalation analysis. Filter: WHERE escalated_to_supervisor = 'yes'."
+    },
+    {
+      "table": "customer_account_master",
+      "column": "line_status",
+      "business_term": "Line Status",
+      "business_definition": "Current status of the service line",
+      "sample_values": ["Active", "Suspended", "Disconnected"],
+      "semantic_type": "categorical",
+      "usage_notes": "Filter to active for KPIs: WHERE line_status = 'Active'."
+    },
+    {
+      "table": "call_center_summary",
+      "column": "handle_time_seconds",
+      "business_term": "Average Handle Time",
+      "business_definition": "Total time agent spent handling call including talk, hold, and after-call work",
+      "semantic_type": "numeric_duration",
+      "unit": "seconds",
+      "usage_notes": "Key performance metric. Convert to minutes: handle_time_seconds / 60. Use AVG() for agent performance."
+    },
+    {
+      "table": "churn_summary",
+      "column": "total_disconnects",
+      "business_term": "Total Disconnects",
+      "business_definition": "Total number of service disconnections",
+      "semantic_type": "numeric_count",
+      "usage_notes": "Primary churn metric. total_disconnects > 0 indicates customer churned."
+    },
+    {
+      "table": "churn_summary",
+      "column": "voluntary_disconnects",
+      "business_term": "Voluntary Disconnects",
+      "business_definition": "Customers who actively chose to cancel service",
+      "semantic_type": "numeric_count",
+      "usage_notes": "voluntary_disconnects > 0 indicates active churn by customer choice."
+    },
+    {
+      "table": "churn_summary",
+      "column": "involuntary_disconnects",
+      "business_term": "Involuntary Disconnects",
+      "business_definition": "Service terminations by provider (non-payment, policy violations)",
+      "semantic_type": "numeric_count",
+      "usage_notes": "involuntary_disconnects > 0 indicates forced disconnection."
+    },
+    {
+      "table": "customer_account_master",
+      "column": "device_type",
+      "business_term": "Device Technology Type",
+      "business_definition": "Network technology type of customer device",
+      "sample_values": ["5G", "4G_LTE", "3G", "TABLET"],
+      "semantic_type": "categorical",
+      "usage_notes": "Use for technology segmentation and network generation analysis."
+    },
+    {
+      "table": "loyalty_call_insights",
+      "column": "save_success_flag",
+      "business_term": "Customer Save Success",
+      "business_definition": "Whether retention attempt successfully saved customer",
+      "semantic_type": "numeric_boolean",
+      "usage_notes": "1 = customer saved, 0 = not saved. Use SUM() for save counts, AVG() for save rate."
+    },
+    {
+      "table": "daily_line_activity",
+      "column": "activity_code",
+      "business_term": "Activity Type",
+      "business_definition": "Type of line activity event",
+      "sample_values": ["Activation", "Deactivation", "Reactivation", "Modification"],
+      "semantic_type": "categorical",
+      "usage_notes": "Use for growth/churn analysis. Filter by type for specific metrics."
+    },
+    {
+      "table": "sentiment_call_detail",
+      "column": "issue_resolved",
+      "business_term": "Issue Resolution Status",
+      "business_definition": "Whether customer's issue was resolved during the call",
+      "sample_values": ["Yes", "No", "Partial"],
+      "semantic_type": "categorical",
+      "usage_notes": "Key quality metric. Use for first-call resolution rate calculation."
+    },
+    {
+      "table": "call_center_summary",
+      "column": "answered_count",
+      "business_term": "Calls Answered",
+      "business_definition": "Binary indicator if call was answered by agent",
+      "semantic_type": "numeric_boolean",
+      "usage_notes": "0 = not answered, 1 = answered. Use SUM() for total answered calls."
+    },
+    {
+      "table": "call_center_summary",
+      "column": "abandoned_count",
+      "business_term": "Calls Abandoned",
+      "business_definition": "Binary indicator if call was abandoned before agent answer",
+      "semantic_type": "numeric_boolean",
+      "usage_notes": "0 = not abandoned, 1 = abandoned. Use SUM() for abandonment counts."
+    }
+  ]
+}
