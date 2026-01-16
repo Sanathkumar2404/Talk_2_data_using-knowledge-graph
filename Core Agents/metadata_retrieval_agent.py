@@ -453,4 +453,30 @@ class MetadataRetrievalAgent:
                 }
                 
             except Exception as e:
-                print(f"❌ Error executing Cypher: {e}"
+                print(f"❌ Error executing Cypher: {e}")
+                import traceback
+                traceback.print_exc()
+                return {"tables": [], "joins": []}
+    
+    def close(self):
+        """Close Neo4j connection"""
+        self.driver.close()
+
+
+if __name__ == "__main__":
+    agent = MetadataRetrievalAgent(
+        neo4j_uri=os.getenv("NEO4J_URI"),
+        neo4j_username=os.getenv("NEO4J_USERNAME"),
+        neo4j_password=os.getenv("NEO4J_PASSWORD"),
+        use_vegas=False,
+        anthropic_api_key=os.getenv("ANTHROPIC_API_KEY")
+    )
+    
+    metadata = agent.retrieve_relevant_metadata(
+        "What is the trend of customer sentiment over the past 6 months?"
+    )
+    
+    print("\n✅ Retrieved Metadata:")
+    print(json.dumps(metadata, indent=2))
+    
+    agent.close()
