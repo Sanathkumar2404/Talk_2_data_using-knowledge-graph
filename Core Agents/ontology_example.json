@@ -1,0 +1,557 @@
+{
+  "domain": "Customer Service and Call Center Operations",
+  "description": "This database supports customer relationship management, call center operations, device management, and customer retention analytics. It tracks customer interactions, sentiment analysis, churn prediction, equipment sales, and service delivery across multiple touchpoints.",
+  "tables": [
+    {
+      "name": "call_transcripts",
+      "type": "fact",
+      "business_description": "Raw call transcript data from customer service interactions with timing and quality metrics.",
+      "primary_key": "call_id",
+      "columns": [
+        {"name": "customer_phone", "data_type": "STRING"},
+        {"name": "ivr_call_id", "data_type": "STRING"},
+        {"name": "agent_id", "data_type": "STRING"},
+        {"name": "start_time", "data_type": "INT64"},
+        {"name": "end_time", "data_type": "INT64"},
+        {"name": "call_id", "data_type": "STRING"},
+        {"name": "transcript_text", "data_type": "STRING"},
+        {"name": "total_call_time", "data_type": "INT64"},
+        {"name": "total_hold_time", "data_type": "INT64"},
+        {"name": "call_center", "data_type": "STRING"},
+        {"name": "event_date", "data_type": "DATE"},
+        {"name": "quality_score", "data_type": "STRING"}
+      ]
+    },
+    {
+      "name": "churn_summary",
+      "type": "fact",
+      "business_description": "Customer churn analysis data with disconnection metrics and customer attributes for retention modeling.",
+      "primary_key": "customer_id",
+      "columns": [
+        {"name": "month", "data_type": "DATE"},
+        {"name": "customer_id", "data_type": "STRING"},
+        {"name": "phone_number", "data_type": "STRING"},
+        {"name": "account_number", "data_type": "STRING"},
+        {"name": "line_sequence_id", "data_type": "STRING"},
+        {"name": "ending_customers", "data_type": "INT64"},
+        {"name": "plan_type", "data_type": "STRING"},
+        {"name": "service_type", "data_type": "STRING"},
+        {"name": "prepaid_flag", "data_type": "STRING"},
+        {"name": "customer_type", "data_type": "STRING"},
+        {"name": "device_brand", "data_type": "STRING"},
+        {"name": "device_category", "data_type": "STRING"},
+        {"name": "birth_year", "data_type": "INT64"},
+        {"name": "region", "data_type": "STRING"},
+        {"name": "voluntary_disconnects", "data_type": "INT64"},
+        {"name": "involuntary_disconnects", "data_type": "INT64"},
+        {"name": "total_disconnects", "data_type": "INT64"},
+        {"name": "market_code", "data_type": "STRING"},
+        {"name": "tenure", "data_type": "STRING"},
+        {"name": "avg_revenue_per_user", "data_type": "NUMERIC"}
+      ]
+    },
+    {
+      "name": "loyalty_agent_activity",
+      "type": "fact",
+      "business_description": "Agent retention attempt details and customer save strategies from loyalty analysis.",
+      "primary_key": "call_id",
+      "columns": [
+        {"name": "call_id", "data_type": "STRING"},
+        {"name": "save_attempt_type", "data_type": "STRING"},
+        {"name": "customer_response", "data_type": "STRING"},
+        {"name": "save_attempt_quality", "data_type": "STRING"},
+        {"name": "offer_accepted_flag", "data_type": "INT64"},
+        {"name": "offer_rejected_flag", "data_type": "INT64"},
+        {"name": "competitor_mentioned", "data_type": "STRING"},
+        {"name": "issue_resolution_attempt", "data_type": "STRING"},
+        {"name": "customer_emotion_change", "data_type": "FLOAT64"},
+        {"name": "customer_saveable", "data_type": "STRING"},
+        {"name": "save_success_flag", "data_type": "INT64"},
+        {"name": "report_date", "data_type": "DATE"},
+        {"name": "ivr_call_id", "data_type": "STRING"},
+        {"name": "recovery_key", "data_type": "STRING"}
+      ]
+    },
+    {
+      "name": "loyalty_call_insights",
+      "type": "fact",
+      "business_description": "Call-level loyalty insights including customer issues, retention strategies, and offer responses.",
+      "primary_key": "call_id",
+      "columns": [
+        {"name": "event_date", "data_type": "STRING"},
+        {"name": "call_id", "data_type": "STRING"},
+        {"name": "primary_issue", "data_type": "STRING"},
+        {"name": "disconnect_reason_category", "data_type": "STRING"},
+        {"name": "billing_issue_category", "data_type": "STRING"},
+        {"name": "competitor_mentioned", "data_type": "STRING"},
+        {"name": "issue_resolution_attempt", "data_type": "STRING"},
+        {"name": "customer_emotion_change", "data_type": "FLOAT64"},
+        {"name": "customer_saveable", "data_type": "STRING"},
+        {"name": "save_success_flag", "data_type": "INT64"},
+        {"name": "retention_strategies_used", "data_type": "STRING"},
+        {"name": "offers_accepted", "data_type": "STRING"},
+        {"name": "offers_rejected", "data_type": "STRING"},
+        {"name": "num_offers_accepted", "data_type": "FLOAT64"},
+        {"name": "num_offers_rejected", "data_type": "FLOAT64"},
+        {"name": "ivr_call_id", "data_type": "STRING"},
+        {"name": "recovery_key", "data_type": "STRING"}
+      ]
+    },
+    {
+      "name": "loyalty_offers",
+      "type": "fact",
+      "business_description": "Individual offer details and customer responses in retention conversations.",
+      "primary_key": "call_id",
+      "columns": [
+        {"name": "call_id", "data_type": "STRING"},
+        {"name": "offer_type", "data_type": "STRING"},
+        {"name": "customer_response", "data_type": "STRING"},
+        {"name": "response_reasons", "data_type": "STRING"},
+        {"name": "offer_quality", "data_type": "STRING"},
+        {"name": "accepted_flag", "data_type": "INT64"},
+        {"name": "rejected_flag", "data_type": "INT64"},
+        {"name": "event_date", "data_type": "STRING"},
+        {"name": "primary_issue", "data_type": "STRING"},
+        {"name": "ivr_call_id", "data_type": "STRING"},
+        {"name": "recovery_key", "data_type": "STRING"}
+      ]
+    },
+    {
+      "name": "customer_account_master",
+      "type": "dimension",
+      "business_description": "Master customer account and line information with service details and contract terms.",
+      "primary_key": "customer_id",
+      "columns": [
+        {"name": "system_id", "data_type": "STRING"},
+        {"name": "customer_id", "data_type": "STRING"},
+        {"name": "line_sequence_id", "data_type": "STRING"},
+        {"name": "account_number", "data_type": "STRING"},
+        {"name": "phone_number", "data_type": "STRING"},
+        {"name": "market_code", "data_type": "STRING"},
+        {"name": "line_activation_date", "data_type": "DATE"},
+        {"name": "line_termination_date", "data_type": "DATE"},
+        {"name": "line_status", "data_type": "STRING"},
+        {"name": "device_serial_number", "data_type": "STRING"},
+        {"name": "contract_number", "data_type": "STRING"},
+        {"name": "contract_end_date", "data_type": "DATE"},
+        {"name": "contract_term_months", "data_type": "INT64"},
+        {"name": "prepaid_flag", "data_type": "STRING"},
+        {"name": "product_name", "data_type": "STRING"},
+        {"name": "birth_year", "data_type": "INT64"},
+        {"name": "customer_type", "data_type": "STRING"},
+        {"name": "device_product_name", "data_type": "STRING"},
+        {"name": "device_type", "data_type": "STRING"},
+        {"name": "line_type", "data_type": "STRING"}
+      ]
+    },
+    {
+      "name": "customer_price_plans",
+      "type": "fact",
+      "business_description": "Current price plan assignments for customer lines with effective dates.",
+      "primary_key": ["customer_id", "plan_effective_date"],
+      "columns": [
+        {"name": "system_id", "data_type": "STRING"},
+        {"name": "customer_id", "data_type": "STRING"},
+        {"name": "line_sequence_id", "data_type": "STRING"},
+        {"name": "plan_code", "data_type": "STRING"},
+        {"name": "plan_market_code", "data_type": "STRING"},
+        {"name": "plan_effective_date", "data_type": "DATE"},
+        {"name": "plan_expiration_date", "data_type": "DATE"},
+        {"name": "plan_type", "data_type": "STRING"},
+        {"name": "service_id", "data_type": "STRING"},
+        {"name": "account_number", "data_type": "STRING"}
+      ]
+    },
+    {
+      "name": "device_specifications",
+      "type": "dimension",
+      "business_description": "Device product mapping with technical specifications and capabilities.",
+      "primary_key": "product_name",
+      "columns": [
+        {"name": "product_name", "data_type": "STRING"},
+        {"name": "model_alias", "data_type": "STRING"},
+        {"name": "manufacturer_name", "data_type": "STRING"},
+        {"name": "device_tier", "data_type": "STRING"},
+        {"name": "operating_system", "data_type": "STRING"},
+        {"name": "device_brand", "data_type": "STRING"},
+        {"name": "device_category", "data_type": "STRING"},
+        {"name": "device_generation", "data_type": "STRING"},
+        {"name": "network_capability_5g", "data_type": "STRING"},
+        {"name": "wifi_capable", "data_type": "STRING"}
+      ]
+    },
+    {
+      "name": "daily_line_activity",
+      "type": "fact",
+      "business_description": "Daily line activity summary with customer metrics and service usage patterns.",
+      "primary_key": ["customer_id", "activity_date"],
+      "columns": [
+        {"name": "report_year", "data_type": "INT64"},
+        {"name": "activity_date", "data_type": "DATE"},
+        {"name": "customer_id", "data_type": "STRING"},
+        {"name": "line_sequence_id", "data_type": "STRING"},
+        {"name": "activity_code", "data_type": "STRING"},
+        {"name": "phone_number", "data_type": "STRING"},
+        {"name": "account_number", "data_type": "STRING"},
+        {"name": "customer_type", "data_type": "STRING"},
+        {"name": "revenue_generating_flag", "data_type": "STRING"},
+        {"name": "prepaid_flag", "data_type": "STRING"},
+        {"name": "in_contract", "data_type": "STRING"},
+        {"name": "promo_type", "data_type": "STRING"},
+        {"name": "market_code", "data_type": "STRING"},
+        {"name": "tenure", "data_type": "STRING"},
+        {"name": "product_name", "data_type": "STRING"},
+        {"name": "plan_code", "data_type": "STRING"},
+        {"name": "birth_year", "data_type": "INT64"},
+        {"name": "gross_adds", "data_type": "INT64"},
+        {"name": "voluntary_disconnects", "data_type": "INT64"},
+        {"name": "involuntary_disconnects", "data_type": "INT64"}
+      ]
+    },
+    {
+      "name": "equipment_sales",
+      "type": "fact",
+      "business_description": "Equipment sales and transaction summary with pricing and customer details.",
+      "primary_key": ["invoice_number", "invoice_line_number"],
+      "columns": [
+        {"name": "invoice_number", "data_type": "STRING"},
+        {"name": "invoice_line_number", "data_type": "STRING"},
+        {"name": "invoice_date", "data_type": "DATE"},
+        {"name": "store_number", "data_type": "STRING"},
+        {"name": "customer_id", "data_type": "STRING"},
+        {"name": "account_number", "data_type": "STRING"},
+        {"name": "phone_number", "data_type": "STRING"},
+        {"name": "device_serial_number", "data_type": "INTEGER"},
+        {"name": "product_name", "data_type": "STRING"},
+        {"name": "device_product_name", "data_type": "STRING"},
+        {"name": "item_price", "data_type": "NUMERIC"},
+        {"name": "item_discount", "data_type": "NUMERIC"},
+        {"name": "item_cost", "data_type": "NUMERIC"},
+        {"name": "sales_quantity", "data_type": "INT64"},
+        {"name": "return_quantity", "data_type": "INT64"},
+        {"name": "net_sales", "data_type": "INT64"}
+      ]
+    },
+    {
+      "name": "call_center_summary",
+      "type": "fact",
+      "business_description": "Call center summary with call metrics and customer interaction details.",
+      "primary_key": "recovery_key",
+      "columns": [
+        {"name": "recovery_key", "data_type": "STRING"},
+        {"name": "ivr_call_id", "data_type": "STRING"},
+        {"name": "call_center_area", "data_type": "STRING"},
+        {"name": "call_end_date", "data_type": "DATE"},
+        {"name": "call_end_time", "data_type": "TIME"},
+        {"name": "customer_phone", "data_type": "STRING"},
+        {"name": "call_center_id", "data_type": "INT64"},
+        {"name": "agent_group_id", "data_type": "INT64"},
+        {"name": "call_duration_seconds", "data_type": "INT64"},
+        {"name": "hold_time_seconds", "data_type": "INT64"},
+        {"name": "talk_time_seconds", "data_type": "INT64"},
+        {"name": "handle_time_seconds", "data_type": "INT64"},
+        {"name": "answered_count", "data_type": "INT64"},
+        {"name": "abandoned_count", "data_type": "INT64"},
+        {"name": "customer_id", "data_type": "STRING"},
+        {"name": "agent_employee_id", "data_type": "STRING"}
+      ]
+    },
+    {
+      "name": "ivr_calls",
+      "type": "fact",
+      "business_description": "IVR system call details with routing and customer interaction data.",
+      "primary_key": "ivr_call_id",
+      "columns": [
+        {"name": "ivr_call_id", "data_type": "STRING"},
+        {"name": "dialed_number", "data_type": "STRING"},
+        {"name": "phone_number", "data_type": "STRING"},
+        {"name": "customer_id", "data_type": "STRING"},
+        {"name": "line_sequence_id", "data_type": "STRING"},
+        {"name": "ivr_steps", "data_type": "STRING"},
+        {"name": "language_preference", "data_type": "STRING"},
+        {"name": "caller_number", "data_type": "STRING"},
+        {"name": "ivr_final_result", "data_type": "STRING"},
+        {"name": "self_service_flag", "data_type": "STRING"},
+        {"name": "prepaid_flag", "data_type": "STRING"},
+        {"name": "ivr_call_date", "data_type": "DATE"}
+      ]
+    },
+    {
+      "name": "sentiment_call_detail",
+      "type": "fact",
+      "business_description": "Detailed sentiment analysis results for customer service calls with intent classification.",
+      "primary_key": "call_id",
+      "columns": [
+        {"name": "event_date", "data_type": "DATE"},
+        {"name": "customer_id", "data_type": "STRING"},
+        {"name": "phone_number", "data_type": "STRING"},
+        {"name": "ivr_call_id", "data_type": "STRING"},
+        {"name": "call_id", "data_type": "STRING"},
+        {"name": "call_quality_score", "data_type": "STRING"},
+        {"name": "report_date", "data_type": "DATE"},
+        {"name": "transcript_clean", "data_type": "STRING"},
+        {"name": "call_summary", "data_type": "STRING"},
+        {"name": "overall_sentiment", "data_type": "STRING"},
+        {"name": "primary_topic", "data_type": "STRING"},
+        {"name": "primary_intent", "data_type": "STRING"},
+        {"name": "call_driver_l1", "data_type": "STRING"},
+        {"name": "call_driver_l2", "data_type": "STRING"},
+        {"name": "call_reason_l3", "data_type": "STRING"},
+        {"name": "customer_pain_point", "data_type": "STRING"},
+        {"name": "issue_resolved", "data_type": "STRING"},
+        {"name": "customer_upset_reason", "data_type": "STRING"},
+        {"name": "escalated_to_supervisor", "data_type": "STRING"},
+        {"name": "callback_promised", "data_type": "STRING"},
+        {"name": "call_disconnected", "data_type": "STRING"},
+        {"name": "support_ticket_created", "data_type": "STRING"},
+        {"name": "total_call_time", "data_type": "INT64"},
+        {"name": "total_hold_time", "data_type": "INT64"},
+        {"name": "call_date", "data_type": "DATE"},
+        {"name": "device_brand", "data_type": "STRING"},
+        {"name": "call_department_landed", "data_type": "STRING"},
+        {"name": "call_department_ended", "data_type": "STRING"},
+        {"name": "departments_transferred", "data_type": "STRING"},
+        {"name": "repeat_caller_3day_count", "data_type": "INT64"}
+      ]
+    },
+    {
+      "name": "sentiment_agent_detail",
+      "type": "fact",
+      "business_description": "Agent-level sentiment analysis with representative performance and customer interaction details.",
+      "primary_key": ["call_id", "agent_id"],
+      "columns": [
+        {"name": "event_date", "data_type": "DATE"},
+        {"name": "customer_id", "data_type": "STRING"},
+        {"name": "phone_number", "data_type": "STRING"},
+        {"name": "ivr_call_id", "data_type": "STRING"},
+        {"name": "agent_id", "data_type": "STRING"},
+        {"name": "call_id", "data_type": "STRING"},
+        {"name": "overall_sentiment", "data_type": "STRING"},
+        {"name": "primary_intent", "data_type": "STRING"},
+        {"name": "call_driver_l1", "data_type": "STRING"},
+        {"name": "call_driver_l2", "data_type": "STRING"},
+        {"name": "issue_resolved", "data_type": "STRING"},
+        {"name": "escalated_to_supervisor", "data_type": "STRING"},
+        {"name": "total_handle_time", "data_type": "INT64"},
+        {"name": "agent_department", "data_type": "STRING"},
+        {"name": "agent_skill_category", "data_type": "STRING"},
+        {"name": "recovery_key", "data_type": "STRING"}
+      ]
+    },
+    {
+      "name": "subscriber_summary",
+      "type": "fact",
+      "business_description": "Subscriber summary with monthly customer counts and service revenue metrics.",
+      "primary_key": ["customer_id", "report_month"],
+      "columns": [
+        {"name": "report_year", "data_type": "INT64"},
+        {"name": "customer_id", "data_type": "STRING"},
+        {"name": "line_sequence_id", "data_type": "STRING"},
+        {"name": "phone_number", "data_type": "STRING"},
+        {"name": "account_number", "data_type": "STRING"},
+        {"name": "customer_type", "data_type": "STRING"},
+        {"name": "revenue_generating_flag", "data_type": "STRING"},
+        {"name": "prepaid_flag", "data_type": "STRING"},
+        {"name": "in_contract", "data_type": "STRING"},
+        {"name": "market_code", "data_type": "STRING"},
+        {"name": "tenure", "data_type": "INTEGER"},
+        {"name": "product_name", "data_type": "STRING"},
+        {"name": "plan_code", "data_type": "STRING"},
+        {"name": "birth_year", "data_type": "INT64"},
+        {"name": "device_brand", "data_type": "STRING"},
+        {"name": "device_category", "data_type": "STRING"},
+        {"name": "ending_customers", "data_type": "INT64"},
+        {"name": "report_month", "data_type": "DATE"}
+      ]
+    },
+    {
+      "name": "call_center_locations",
+      "type": "dimension",
+      "business_description": "Call center location and configuration details for routing and reporting.",
+      "primary_key": "call_center_id",
+      "columns": [
+        {"name": "call_center_id", "data_type": "INT64"},
+        {"name": "call_center_name", "data_type": "STRING"},
+        {"name": "call_center_type", "data_type": "INT64"},
+        {"name": "site_code", "data_type": "STRING"},
+        {"name": "timezone_offset", "data_type": "INT64"}
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "from_table": "call_transcripts",
+      "to_table": "customer_account_master",
+      "relationship_type": "many_to_one",
+      "via_field": "phone_number",
+      "business_description": "Call transcripts are linked to customer accounts via phone number."
+    },
+    {
+      "from_table": "churn_summary",
+      "to_table": "customer_account_master",
+      "relationship_type": "many_to_one",
+      "via_field": ["customer_id", "phone_number"],
+      "business_description": "Churn analysis records are associated with specific customer accounts."
+    },
+    {
+      "from_table": "customer_account_master",
+      "to_table": "customer_price_plans",
+      "relationship_type": "one_to_many",
+      "via_field": ["customer_id", "line_sequence_id"],
+      "business_description": "Customer accounts link to their current price plans for billing analysis."
+    },
+    {
+      "from_table": "call_center_summary",
+      "to_table": "customer_account_master",
+      "relationship_type": "many_to_one",
+      "via_field": ["customer_id", "phone_number"],
+      "business_description": "Call summaries are linked to customer accounts to track service interactions."
+    },
+    {
+      "from_table": "loyalty_agent_activity",
+      "to_table": "ivr_calls",
+      "relationship_type": "many_to_one",
+      "via_field": "ivr_call_id",
+      "business_description": "Loyalty insights are linked to specific IVR call sessions."
+    },
+    {
+      "from_table": "loyalty_agent_activity",
+      "to_table": "call_center_summary",
+      "relationship_type": "many_to_one",
+      "via_field": "recovery_key",
+      "business_description": "Agent activity is connected to call center summaries."
+    },
+    {
+      "from_table": "daily_line_activity",
+      "to_table": "customer_account_master",
+      "relationship_type": "many_to_one",
+      "via_field": ["customer_id", "phone_number"],
+      "business_description": "Daily line activities are tracked for specific customer accounts."
+    },
+    {
+      "from_table": "equipment_sales",
+      "to_table": "customer_account_master",
+      "relationship_type": "many_to_one",
+      "via_field": ["customer_id", "phone_number"],
+      "business_description": "Equipment sales transactions are linked to customer accounts."
+    },
+    {
+      "from_table": "sentiment_call_detail",
+      "to_table": "customer_account_master",
+      "relationship_type": "many_to_one",
+      "via_field": ["customer_id", "phone_number"],
+      "business_description": "Sentiment analysis results are linked to customer accounts."
+    },
+    {
+      "from_table": "sentiment_agent_detail",
+      "to_table": "call_center_summary",
+      "relationship_type": "many_to_one",
+      "via_field": "recovery_key",
+      "business_description": "Agent-level sentiment data connects to call summaries."
+    },
+    {
+      "from_table": "loyalty_call_insights",
+      "to_table": "call_center_summary",
+      "relationship_type": "many_to_one",
+      "via_field": "ivr_call_id",
+      "business_description": "Loyalty call analysis linked to call summaries."
+    },
+    {
+      "from_table": "loyalty_call_insights",
+      "to_table": "ivr_calls",
+      "relationship_type": "many_to_one",
+      "via_field": "ivr_call_id",
+      "business_description": "Loyalty insights linked to IVR call records."
+    },
+    {
+      "from_table": "ivr_calls",
+      "to_table": "customer_account_master",
+      "relationship_type": "many_to_one",
+      "via_field": ["customer_id", "phone_number"],
+      "business_description": "IVR calls linked to customer accounts."
+    },
+    {
+      "from_table": "sentiment_call_detail",
+      "to_table": "ivr_calls",
+      "relationship_type": "many_to_one",
+      "via_field": "ivr_call_id",
+      "business_description": "Sentiment analysis linked to IVR call sessions."
+    }
+  ],
+  "key_metrics": [
+    {
+      "name": "Customer Churn Rate",
+      "description": "Percentage of customers who disconnect service in a given period",
+      "calculation": "(voluntary_disconnects + involuntary_disconnects) / ending_customers * 100",
+      "tables_involved": ["churn_summary", "subscriber_summary"]
+    },
+    {
+      "name": "Average Handle Time",
+      "description": "Average time agents spend handling customer calls",
+      "calculation": "SUM(total_handle_time) / COUNT(calls)",
+      "tables_involved": ["sentiment_agent_detail", "call_center_summary"]
+    },
+    {
+      "name": "Customer Sentiment Score",
+      "description": "Average sentiment score across all customer interactions",
+      "calculation": "AVG(overall_sentiment)",
+      "tables_involved": ["sentiment_call_detail"]
+    },
+    {
+      "name": "Call Resolution Rate",
+      "description": "Percentage of calls resolved without escalation or callback",
+      "calculation": "COUNT(resolved_calls) / COUNT(total_calls) * 100",
+      "tables_involved": ["sentiment_call_detail", "loyalty_call_insights"]
+    },
+    {
+      "name": "Equipment Sales Revenue",
+      "description": "Total revenue from equipment sales",
+      "calculation": "SUM(item_price * sales_quantity)",
+      "tables_involved": ["equipment_sales"]
+    },
+    {
+      "name": "Customer Retention Success Rate",
+      "description": "Percentage of at-risk customers successfully retained",
+      "calculation": "SUM(save_success_flag) / COUNT(retention_attempts) * 100",
+      "tables_involved": ["loyalty_agent_activity"]
+    }
+  ],
+  "common_dimensions": [
+    {
+      "name": "Customer",
+      "description": "Customer identification and segmentation",
+      "tables": ["customer_account_master", "churn_summary", "daily_line_activity", "subscriber_summary"],
+      "columns": ["customer_id", "phone_number", "account_number", "customer_type"]
+    },
+    {
+      "name": "Time",
+      "description": "Temporal dimensions for trend analysis",
+      "tables": ["call_transcripts", "churn_summary", "daily_line_activity", "subscriber_summary"],
+      "columns": ["event_date", "activity_date", "report_month", "invoice_date"]
+    },
+    {
+      "name": "Device",
+      "description": "Device and equipment characteristics",
+      "tables": ["device_specifications", "customer_account_master", "churn_summary"],
+      "columns": ["device_brand", "device_category", "product_name", "device_serial_number"]
+    },
+    {
+      "name": "Call Center",
+      "description": "Call center operations and agent performance",
+      "tables": ["call_center_locations", "call_center_summary", "sentiment_agent_detail"],
+      "columns": ["call_center_id", "agent_id", "recovery_key"]
+    },
+    {
+      "name": "Service Plan",
+      "description": "Customer service plans and pricing",
+      "tables": ["customer_price_plans", "daily_line_activity", "subscriber_summary"],
+      "columns": ["plan_code", "plan_market_code", "prepaid_flag"]
+    },
+    {
+      "name": "Geography",
+      "description": "Geographic and market segmentation",
+      "tables": ["customer_account_master", "daily_line_activity", "churn_summary"],
+      "columns": ["market_code", "region"]
+    }
+  ]
+}
